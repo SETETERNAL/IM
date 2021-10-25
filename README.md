@@ -15,9 +15,9 @@
 
 #### 使用说明
 
-1.  xxxx
-2.  xxxx
-3.  xxxx
+1.  修改server中的redis和zookeeper配置
+2.  根据ServerMain.java启动server服务（如果需要集群可使用nginx做负载均衡）
+3.  修改ClientMain.host和ClientMain.port，启动client服务
 
 #### 参与贡献
 
