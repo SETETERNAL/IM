@@ -31,7 +31,7 @@ public class AuthHandler extends SimpleChannelInboundHandler<Packet> {
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, Packet msg) {
         if(msg instanceof MessagePacket) {
-            // TODO rpc的判断先简单实现
+            // TODO rpc的判断先简单实现,这种方式是设计的缺陷，后面优化
             boolean hasRpc = (msg instanceof MessagePacket && ((MessagePacket)msg).getHasRpc());
             if (hasRpc || hasLogin(ctx.channel())) {
                 ctx.fireChannelRead(msg);
