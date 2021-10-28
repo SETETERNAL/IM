@@ -30,3 +30,7 @@
 4.  运行RedisSingleUtil初始化用户数据
 
 **ps: idea需要安装lombok插件**
+
+#### 演示地址
+
+后续补充...

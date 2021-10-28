@@ -6,7 +6,7 @@ import im.model.LoginPacket;
 import im.model.Member;
 import im.server.ServerMain;
 import im.server.commpent.redis.RedisKey;
-import im.server.commpent.redis.RedisSingleUtil;
+import im.server.commpent.redis.RedisUtil;
 import im.server.commpent.zookeeper.model.ServerRegister;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
@@ -52,7 +52,7 @@ public class LoginServerHandler extends SimpleChannelInboundHandler<LoginPacket>
         if(StringUtils.isEmpty(userName)){
             return null;
         }
-        String memberStr = RedisSingleUtil.getStr(RedisKey.USER_INFO_KEY + userName);
+        String memberStr = RedisUtil.getStr(RedisKey.USER_INFO_KEY + userName);
         return new Gson().fromJson(memberStr, Member.class);
     }
 
@@ -70,9 +70,9 @@ public class LoginServerHandler extends SimpleChannelInboundHandler<LoginPacket>
                     AuthHandler.putLoginStatus(ctx, new Member(loginPacket.getLoginName()));
                     ctx.channel().writeAndFlush(new JsonPacket(100,"登录成功", (Object) token));
                     // 设置服务器标识
-                    RedisSingleUtil.setStr(RedisKey.USER_SERVER_KEY + loginPacket.getLoginName(), new ServerRegister("127.0.0.1", ServerMain.port).toString());
+                    RedisUtil.setStr(RedisKey.USER_SERVER_KEY + loginPacket.getLoginName(), new ServerRegister("127.0.0.1", ServerMain.port).toString());
                     // 记录分布式登录状态
-                    RedisSingleUtil.setStr(RedisKey.USER_LOGIN_TOKEN_KEY + token, new Gson().toJson(member));
+                    RedisUtil.setStr(RedisKey.USER_LOGIN_TOKEN_KEY + token, new Gson().toJson(member));
                     // 发送离线消息
                     MESSAGE_CACHE_THREAD_POOL.execute(() -> {
                         sendOfflineMessage(ctx, loginPacket.getLoginName());
@@ -115,7 +115,7 @@ public class LoginServerHandler extends SimpleChannelInboundHandler<LoginPacket>
     public static void sendOfflineMessage(ChannelHandlerContext ctx, String receiverId){
         String redisKey = RedisKey.MESSAGE_KEY + receiverId;
         List<String> messageList;
-        while((messageList = RedisSingleUtil.batchLpop(redisKey, 10)).size() > 0){
+        while((messageList = RedisUtil.batchLpop(redisKey, 10)).size() > 0){
             for (int i = 0; i < messageList.size(); i++) {
                 String message = messageList.get(i);
                 if (ctx.channel().isOpen()) {
@@ -125,7 +125,7 @@ public class LoginServerHandler extends SimpleChannelInboundHandler<LoginPacket>
                             .addListener(future -> {
                                 if(!future.isSuccess()){
                                     // 发送失败重新加回队列
-                                    RedisSingleUtil.rpush(redisKey, message);
+                                    RedisUtil.rpush(redisKey, message);
                                 }
                             });
                 }else{
@@ -135,7 +135,7 @@ public class LoginServerHandler extends SimpleChannelInboundHandler<LoginPacket>
                         tmpMessageList.add(messageList.get(j));
                     }
                     if(tmpMessageList.size() > 0) {
-                        RedisSingleUtil.rpush(redisKey, messageList.toArray(new String[0]));
+                        RedisUtil.rpush(redisKey, messageList.toArray(new String[0]));
                     }
                     return;
                 }

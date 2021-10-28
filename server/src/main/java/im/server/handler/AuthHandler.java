@@ -4,7 +4,7 @@ import com.google.gson.Gson;
 import im.model.*;
 import im.server.ServerMain;
 import im.server.commpent.redis.RedisKey;
-import im.server.commpent.redis.RedisSingleUtil;
+import im.server.commpent.redis.RedisUtil;
 import im.server.commpent.zookeeper.model.ServerRegister;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
@@ -41,7 +41,7 @@ public class AuthHandler extends SimpleChannelInboundHandler<Packet> {
                     putLoginStatus(ctx, member);
                     MESSAGE_CACHE_THREAD_POOL.execute(() -> {
                         // 服务器宕机后重新给用户分配服务器
-                        RedisSingleUtil.setStr(RedisKey.USER_SERVER_KEY + member.getUsername(), new ServerRegister("127.0.0.1", ServerMain.port).toString());
+                        RedisUtil.setStr(RedisKey.USER_SERVER_KEY + member.getUsername(), new ServerRegister("127.0.0.1", ServerMain.port).toString());
                         // 发送离线消息
                         LoginServerHandler.sendOfflineMessage(ctx, member.getUsername());
                     });
@@ -81,7 +81,7 @@ public class AuthHandler extends SimpleChannelInboundHandler<Packet> {
         if(StringUtils.isEmpty(token)){
             return null;
         }
-        String member = RedisSingleUtil.getStr(RedisKey.USER_LOGIN_TOKEN_KEY + token);
+        String member = RedisUtil.getStr(RedisKey.USER_LOGIN_TOKEN_KEY + token);
         if(StringUtils.isBlank(member)){
             return null;
         }
